@@ -26,6 +26,25 @@ pipeline {
       }
     }
 
+    stage('Prepare Deployment Directory') {
+      steps {
+        sshPublisher(publishers: [
+          sshPublisherDesc(
+            configName: 'dockerhost',
+            transfers: [
+              sshTransfer(
+                sourceFiles: '',
+                execCommand: '''
+                  # Ensure the deployment directory is clean
+                  rm -f /opt/docker/webapp.war
+                '''
+              )
+            ]
+          )
+        ])
+      }
+    }
+	
     stage('Transfer and Deploy') {
       steps {
         sshPublisher(publishers: [
