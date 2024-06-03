@@ -25,8 +25,8 @@ pipeline {
         sh 'echo "Build successful"'
       }
     }
-
-    stage('Prepare Deployment Directory') {
+	
+	stage('Prepare Deployment Directory') {
       steps {
         sshPublisher(publishers: [
           sshPublisherDesc(
@@ -36,7 +36,7 @@ pipeline {
                 sourceFiles: '',
                 execCommand: '''
                   # Ensure the deployment directory is clean
-                  rm -f /opt/docker/webapp.war
+                  rm -f //opt//docker//webapp.war
                 '''
               )
             ]
@@ -44,7 +44,7 @@ pipeline {
         ])
       }
     }
-	
+
     stage('Transfer and Deploy') {
       steps {
         sshPublisher(publishers: [
@@ -74,7 +74,7 @@ pipeline {
                   docker run -d --name registerapp -p 8081:8080 regapp:v1;
                   docker ps -a;
                   echo "New container started";
-                '''.stripIndent()
+                '''
               )
             ]
           )
