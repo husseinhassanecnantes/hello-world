@@ -26,14 +26,7 @@ pipeline {
       }
     }
 
-    stage('Verify Artifact') {
-      steps {
-        sh 'ls -la webapp/target'
-        sh 'echo "Verify that webapp.war exists in webapp/target"'
-      }
-    }
-
-    stage('Transfer Artifact') {
+    stage('Transfer and Deploy') {
       steps {
         sshPublisher(publishers: [
           sshPublisherDesc(
@@ -42,62 +35,26 @@ pipeline {
               sshTransfer(
                 sourceFiles: 'webapp/target/*.war',
                 removePrefix: 'webapp/target',
-                remoteDirectory: '/opt/docker'
-              )
-            ]
-          )
-        ])
-      }
-    }
-
-    stage('Build Docker Image') {
-      steps {
-        sshPublisher(publishers: [
-          sshPublisherDesc(
-            configName: 'dockerhost',
-            transfers: [
-              sshTransfer(
-                sourceFiles: '',
+                remoteDirectory: '/opt/docker',
                 execCommand: '''
+                  # Verify the transfer
+                  ls -la /opt/docker;
+                  echo "Verify that webapp.war was transferred to /opt/docker";
+
+                  # Build Docker image
                   cd /opt/docker;
                   docker build -t regapp:v1 .;
-                '''
-              )
-            ]
-          )
-        ])
-      }
-    }
+                  echo "Docker image build complete";
 
-    stage('Stop and Remove Existing Container') {
-      steps {
-        sshPublisher(publishers: [
-          sshPublisherDesc(
-            configName: 'dockerhost',
-            transfers: [
-              sshTransfer(
-                sourceFiles: '',
-                execCommand: '''
+                  # Stop and remove existing container
                   docker stop registerapp || true;
                   docker rm registerapp || true;
-                '''
-              )
-            ]
-          )
-        ])
-      }
-    }
+                  echo "Existing container stopped and removed";
 
-    stage('Run Docker Container') {
-      steps {
-        sshPublisher(publishers: [
-          sshPublisherDesc(
-            configName: 'dockerhost',
-            transfers: [
-              sshTransfer(
-                sourceFiles: '',
-                execCommand: '''
+                  # Run Docker container
                   docker run -d --name registerapp -p 8081:8080 regapp:v1;
+                  docker ps -a;
+                  echo "New container started";
                 '''
               )
             ]
