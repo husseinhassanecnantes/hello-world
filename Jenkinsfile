@@ -55,7 +55,7 @@ pipeline {
                   docker run -d --name registerapp -p 8081:8080 regapp:v1;
                   docker ps -a;
                   echo "New container started";
-                '''
+                '''.stripIndent()
               )
             ]
           )
