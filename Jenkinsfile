@@ -30,12 +30,12 @@ pipeline {
       steps {
         sshPublisher(publishers: [
           sshPublisherDesc(
-            configName: 'dockerhost',
+            configName: 'dockerhost', // Configuration SSH correcte pour le serveur Docker
             transfers: [
               sshTransfer(
-                sourceFiles: '',
+                sourceFiles: '', // Pas de fichier à transférer ici
                 execCommand: '''
-                  # Ensure the deployment directory is clean
+                  # Suppression du fichier webapp.war existant dans /opt/docker
                   rm -f /opt/docker/webapp.war
                 '''
               )
@@ -52,9 +52,8 @@ pipeline {
             configName: 'dockerhost',
             transfers: [
               sshTransfer(
-                sourceFiles: 'webapp/target/*.war',
-                removePrefix: 'webapp/target',
-                remoteDirectory: '/opt/docker'
+                sourceFiles: 'webapp/target/webapp.war', // Chemin correct du fichier webapp.war
+                remoteDirectory: '/opt/docker' // Assurez-vous que le fichier est transféré dans /opt/docker
               )
             ]
           )
@@ -69,25 +68,27 @@ pipeline {
             configName: 'dockerhost',
             transfers: [
               sshTransfer(
-                sourceFiles: '',
+                sourceFiles: '', // Pas de fichier à transférer ici
                 execCommand: '''
-                  # Verify the transfer
+                  # Vérification du transfert
                   ls -la /opt/docker;
                   echo "Verify that webapp.war was transferred to /opt/docker";
 
-                  # Build Docker image
+                  # Construction de l'image Docker
                   cd /opt/docker;
                   docker build -t regapp:v1 .;
                   echo "Docker image build complete";
+                  docker images; # Ajouté pour vérifier la création de l'image
 
-                  # Stop and remove existing container
+                  # Arrêt et suppression du conteneur existant
                   docker stop registerapp || true;
                   docker rm registerapp || true;
                   echo "Existing container stopped and removed";
+                  docker ps -a; # Ajouté pour vérifier les conteneurs
 
-                  # Run Docker container
+                  # Exécution du nouveau conteneur Docker
                   docker run -d --name registerapp -p 8081:8080 regapp:v1;
-                  docker ps -a;
+                  docker ps -a; # Ajouté pour vérifier que le conteneur a démarré
                   echo "New container started";
                 '''
               )
