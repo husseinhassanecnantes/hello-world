@@ -26,6 +26,13 @@ pipeline {
       }
     }
 
+    stage('Verify Artifact') {
+      steps {
+        sh 'ls -la webapp/target'
+        sh 'echo "Verify that webapp.war exists in webapp/target"'
+      }
+    }
+
     stage('Transfer Artifact') {
       steps {
         sshPublisher(publishers: [
