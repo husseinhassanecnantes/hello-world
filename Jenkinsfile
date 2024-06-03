@@ -25,8 +25,8 @@ pipeline {
         sh 'echo "Build successful"'
       }
     }
-	
-	stage('Prepare Deployment Directory') {
+
+    stage('Prepare Deployment Directory') {
       steps {
         sshPublisher(publishers: [
           sshPublisherDesc(
@@ -36,7 +36,7 @@ pipeline {
                 sourceFiles: '',
                 execCommand: '''
                   # Ensure the deployment directory is clean
-                  rm -f //opt//docker//webapp.war
+                  rm -f /opt/docker/webapp.war
                 '''
               )
             ]
@@ -45,7 +45,7 @@ pipeline {
       }
     }
 
-    stage('Transfer and Deploy') {
+    stage('Transfer Artifact') {
       steps {
         sshPublisher(publishers: [
           sshPublisherDesc(
@@ -54,7 +54,22 @@ pipeline {
               sshTransfer(
                 sourceFiles: 'webapp/target/*.war',
                 removePrefix: 'webapp/target',
-                remoteDirectory: '/opt/docker',
+                remoteDirectory: '/opt/docker'
+              )
+            ]
+          )
+        ])
+      }
+    }
+
+    stage('Deploy and Log') {
+      steps {
+        sshPublisher(publishers: [
+          sshPublisherDesc(
+            configName: 'dockerhost',
+            transfers: [
+              sshTransfer(
+                sourceFiles: '',
                 execCommand: '''
                   # Verify the transfer
                   ls -la /opt/docker;
